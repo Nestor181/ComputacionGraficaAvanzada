@@ -116,6 +116,8 @@ float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRig
 int modelSelected = 0;
 bool enableCountSelected = true;
 
+float avance = 0.01, giroEclipse = 0.1;
+
 // Variables to animations keyframes
 bool saveFrame = false, availableSave = true;
 std::ofstream myfile;
@@ -919,6 +921,8 @@ void applicationLoop() {
 		modelMatrixLamboLeftDor = glm::translate(modelMatrixLamboLeftDor, glm::vec3(-1.08676, -0.707316, -0.982601));
 		modelLamboLeftDor.render(modelMatrixLamboLeftDor);
 		modelLamboRightDor.render(modelMatrixLamboChasis);
+		modelMatrixLamboLeftDor = glm::translate( modelMatrixLamboLeftDor, glm::vec3( -1.0866, -0.702655, -0.975953 ) );
+
 		modelLamboFrontLeftWheel.render(modelMatrixLamboChasis);
 		modelLamboFrontRightWheel.render(modelMatrixLamboChasis);
 		modelLamboRearLeftWheel.render(modelMatrixLamboChasis);
@@ -996,6 +1000,84 @@ void applicationLoop() {
 		// Constantes de animaciones
 		rotHelHelY += 0.5;
 
+//========================================Maquina de estados del eclipse=======================================================
+		
+		if ( record && modelSelected == 1 )
+		{
+			matrixDartJoints.push_back( rotDartHead );
+			matrixDartJoints.push_back( rotDartLeftArm );
+			matrixDartJoints.push_back( rotDartLeftHand );
+			matrixDartJoints.push_back( rotDartRightArm );
+			matrixDartJoints.push_back( rotDartRightHand );
+			matrixDartJoints.push_back( rotDartLeftLeg );
+			matrixDartJoints.push_back( rotDartRightLeg );
+
+			if ( saveFrame )
+			{	
+				saveFrame = false;
+				appendFrame( myfile, matrixDartJoints );
+			}
+			
+
+		}
+		
+		
+		switch (state)
+		{
+		case 0:
+			if ( numberAdvance == 0 ) //En que cacho estamos
+			{	
+				maxAdvance = 64.0; //Cuanto se va a mover en ese cacho
+			}
+			else if ( numberAdvance == 1 )
+			{
+				maxAdvance = 50.0;
+			}
+			else if ( numberAdvance == 2 )
+			{
+				maxAdvance = 45.0;
+			}
+			else if ( numberAdvance == 3 )
+			{
+				maxAdvance = 50.0;
+			}
+			else if ( numberAdvance == 4 )
+			{
+				maxAdvance = 45.0;
+			}
+			state = 1;		
+			break;
+		
+		case 1:
+			modelMatrixEclipse = glm::translate( modelMatrixEclipse, glm::vec3( 0, 0, avance ) );
+			advanceCount += avance;
+			rotWheelsX += 0.05;
+			if( advanceCount > maxAdvance ){
+				advanceCount = 0;
+				state = 2;
+			}
+			break;
+		
+		case 2:
+			modelMatrixEclipse = glm::translate( modelMatrixEclipse, glm::vec3( 0, 0, 0.0025 ) );
+			modelMatrixEclipse = glm::rotate( modelMatrixEclipse, glm::radians( giroEclipse ), glm::vec3( 0, 1, 0 ) );
+			rotCount += giroEclipse;
+			if (rotCount >= 90.0f )
+			{
+				rotCount = 0;
+				state = 0;
+				if ( numberAdvance > 4 )
+				{
+					numberAdvance = 1;
+				}
+				
+			}
+			
+			break;
+		
+		default:
+			break;
+		}
 		glfwSwapBuffers(window);
 	}
 }
